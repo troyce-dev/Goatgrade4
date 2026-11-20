@@ -14,6 +14,7 @@ To share with students, turn on **GitHub Pages** (Settings → Pages → Deploy 
 - **Checkpoint rides:** two per world (hollow oak tunnel, zip line, raft, hot air balloon, mine cart, barrel cannon, cable car, basket lift). Students board a ride by answering a math question correctly.
 - **Castles:** a short lava-hall level, then a boss fight.
 - **Final world:** climb a giant tree, then cross drifting, elevator and vanishing clouds.
+- **Bricks:** jump into a brick from below to smash it and knock out any enemy standing on it.
 - **Spikes:** silver spikes with red tips, plus pop-up spikes that rise and drop on a timer, so you have to time your crossing.
 - **Bonus round:** 90 seconds of questions after each world earns slot machine spins.
 

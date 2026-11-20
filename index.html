@@ -156,6 +156,7 @@ sup .box{width:1em;height:1em}
       <dt>Snot rockets</dt><dd>Some bricks hide a sneezeweed. Bump them from below, then chase it down before it rolls into a pit or off the screen. Fire with F or X</dd>
       <dt>Bonus round</dt><dd>After each world, answer as many math questions as you can in 90 seconds. Each correct answer earns a slot machine spin for lives, snot rockets or coins</dd>
       <dt>Spikes</dt><dd>Silver spikes with red tips hurt! Some pop up and down out of yellow-striped plates. Wait for them to drop, then run across</dd>
+      <dt>Bricks</dt><dd>Jump into a brick from below to smash it. Any enemy standing on it gets knocked out, and coins on top are yours. The flying pieces can’t hurt you</dd>
       <dt>Stomp</dt><dd>Land on enemies from above. Stomp a shellback, then kick its shell into other enemies</dd>
       <dt>Castles</dt><dd>Cross the castle’s lava halls (watch out for flame jets!), then beat the boss. Stomp it or sneeze on it to free whoever is in the cage</dd>
       <dt>The sky</dt><dd>In the last world some clouds drift side to side, some ride up and down, and the purple-striped ones vanish soon after you land on them</dd>
@@ -1118,6 +1119,7 @@ function sfx(name){
     case 'bossdie': for (let i=0;i<6;i++) noiseHit(t+i*0.12,0.2,0.35,d,300+i*120); [262,330,392,523].forEach((f,i)=>tone(f,t+0.8+i*0.1,0.3,'square',0.12,d)); break;
     case 'door': tone(110,t,0.7,'sawtooth',0.12,d,50); noiseHit(t,0.5,0.12,d,300,'lowpass'); break;
     case 'tick': tone(1400,t,0.03,'square',0.05,d); break;
+    case 'break': noiseHit(t,0.25,0.5,d,1200,'bandpass'); tone(220,t,0.12,'square',0.15,d,90); break;
     case 'win': [523,659,784,1047,784,1047].forEach((f,i)=>tone(f,t+i*0.08,0.18,'square',0.12,d)); break;
     case 'lava': noiseHit(t,0.5,0.4,d,400,'lowpass'); tone(300,t,0.5,'sawtooth',0.12,d,60); break;
     case 'whoosh': noiseHit(t,0.6,0.25,d,900,'bandpass'); [523,659,784].forEach((f,i)=>tone(f,t+i*0.08,0.2,'triangle',0.18,d)); break;
@@ -1260,6 +1262,19 @@ function enterCastle(){
   S.bannerTitle = A.boss.final ? 'Baron Tusker’s throne room' : 'Inside the castle';
   S.introSub = A.boss.final ? 'Cross the lava halls, then beat the Baron!' : 'Cross the lava halls to reach the boss room';
 }
+// Hitting a plain brick from below smashes it. Anything standing on it is knocked out,
+// and coins resting on it are collected. The flying pieces are only decoration and can't hurt you.
+const BRICK_COL={wood:['#a8743f','#5e3c1d'],cobble:['#9a9ca3','#55575e'],sandstone:['#d39a62','#b77d48'],ice:['#bfe6f8','#6aaed2'],granite:['#6c6e76','#82848c']};
+function breakBrick(c,r){
+  L.grid[r][c]='.'; sfx('break'); S.score+=20;
+  const [c1,c2]=BRICK_COL[L.th.block]||BRICK_COL.wood;
+  for (let i=0;i<4;i++) parts.push({x:c*T+8+(i%2)*16,y:r*T+8+(i>1?16:0),vx:(i%2?1:-1)*(70+Math.random()*60),vy:-(i>1?260:420)-Math.random()*80,life:1.1,kind:'chunk',color:i%2?c1:c2,rot:Math.random()*6,spin:(i%2?1:-1)*(8+Math.random()*6)});
+  for (const e of L.enemies){
+    if (e.dead || e.fly) continue;
+    if (e.x+e.w>c*T+2 && e.x<(c+1)*T-2 && Math.abs(e.y+e.h-r*T)<8){ killEnemy(e); S.score+=100; burst(e.x+e.w/2,e.y+e.h/2,'#ffd84a',8); }
+  }
+  for (const gm of L.gems){ if (!gm.got && Math.abs(gm.x-(c*T+16))<16 && gm.y<r*T && gm.y>r*T-2*T){ gm.got=true; addGems(1); sfx('coin'); } }
+}
 function bump(c,r){
   sfx('bump'); sfx('power');
   L.grid[r][c]='U';
@@ -1278,7 +1293,7 @@ function hitEnemy(e){
 function update(dt){
   time+=dt;
   if (S.toast){ S.toast.t-=dt; if (S.toast.t<=0) S.toast=null; }
-  for (const p of parts){ p.x+=p.vx*dt; p.y+=p.vy*dt; if (p.kind==='bit') p.vy+=900*dt; p.life-=dt; }
+  for (const p of parts){ p.x+=p.vx*dt; p.y+=p.vy*dt; if (p.kind==='bit') p.vy+=900*dt; if (p.kind==='chunk'){ p.vy+=1400*dt; p.rot+=p.spin*dt; } p.life-=dt; }
   parts=parts.filter(p=>p.life>0);
   if (S.state==='intro'){ S.timer-=dt; if (S.timer<=0){ S.state='play'; S.bannerTitle=null; S.introSub=null; } return; }
   if (S.state==='dying'){ S.timer-=dt; P.vy+=GRAV*dt; P.y+=P.vy*dt; if (S.timer<=0) respawn(); return; }
@@ -1331,6 +1346,7 @@ function update(dt){
     (h,vyb)=>{
       if (vyb>=0) return;
       if (h.ch==='P') bump(h.c,h.r);
+      else if (h.ch==='B' && zone!=='castle') breakBrick(h.c,h.r);
       else if (h.ch==='H' && qCooldown<=0){ const gt=L.gates.find(q=>q.horiz&&q.r===h.r); if (gt&&!gt.open) askQuestion({kind:'hatch',ref:gt}); }
     });
   if (S.state!=='play') return;
@@ -2459,6 +2475,7 @@ function drawRockets(){
 function drawParts(){
   for (const p of parts){
     if (p.kind==='bubble'){ ctx.strokeStyle='rgba(220,250,255,.8)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(p.x+Math.sin(p.life*6)*3,p.y,3,0,7); ctx.stroke(); }
+    else if (p.kind==='chunk'){ ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.color; ctx.fillRect(-6,-5,12,10); ctx.fillStyle='rgba(0,0,0,.25)'; ctx.fillRect(-6,3,12,2); ctx.restore(); }
     else { ctx.fillStyle=p.color; ctx.fillRect(p.x,p.y,3,3); }
   }
 }
