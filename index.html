@@ -155,11 +155,11 @@ sup .box{width:1em;height:1em}
       <dt>Checkpoint rides</dt><dd>Walk up to a ride with a <b>?</b> badge to get your math question. Answer correctly to ride to the next part of the world. If you fall, you start again at your last ride</dd>
       <dt>Snot rockets</dt><dd>Some bricks hide a sneezeweed. Bump them from below, then chase it down before it rolls into a pit or off the screen. Fire with F or X</dd>
       <dt>Bonus round</dt><dd>After each world, answer as many math questions as you can in 90 seconds. Each correct answer earns a slot machine spin for lives, snot rockets or coins</dd>
-      <dt>Spikes</dt><dd>Silver spikes with red tips hurt! Some pop up and down out of yellow-striped plates. Wait for them to drop, then run across</dd>
+      <dt>Spikes</dt><dd>Thorns, sharp rocks, ice spikes and crystals hurt! Some pop up and down out of holes in the ground. Wait for them to drop, then run across</dd>
       <dt>Bricks</dt><dd>Jump into a brick from below to smash it. Any enemy standing on it gets knocked out, and coins on top are yours. The flying pieces can’t hurt you</dd>
       <dt>Swimming</dt><dd>In Coral Cove you’re underwater: tap jump to swim up. Pink jellyfish sting! Don’t touch them, even from above. Swim through the gaps in the coral and the rock tunnels</dd>
       <dt>Stomp</dt><dd>Land on enemies from above. Stomp a shellback, then kick its shell into other enemies</dd>
-      <dt>Castles</dt><dd>Cross the castle’s lava halls (watch out for flame jets!), then beat the boss. Stomp it or sneeze on it to free whoever is in the cage</dd>
+      <dt>Castles</dt><dd>Every castle is different, and each one is tougher than the last: flame jets, cannons firing big cannonballs (jump over them or bounce on top), swinging axes, crushing stone blocks and bridges that crumble under your feet. Get through the hall, then beat the boss. Stomp it or sneeze on it to free whoever is in the cage</dd>
       <dt>The sky</dt><dd>In the last world some clouds drift side to side, some ride up and down, and the purple-striped ones vanish soon after you land on them</dd>
       <dt>Pause</dt><dd>Esc or the Menu button pauses the game and lets you return to this main menu</dd>
     </dl>
@@ -853,27 +853,56 @@ function buildArena(set, ac, rt, wi){
 }
 
 // Inside each castle: a short lava-hall level, then the boss room
+// Each castle has its own hazard list, and later castles are longer with nastier hazards.
+//  pitN = lava pit N wide, platN = wide lava pit with a moving stone slab, jet = flame jet,
+//  foe = enemy, cannon = cannon firing big cannonballs, crumbleN = stone bridge that crumbles
+//  under your feet over lava, pendulum = swinging axe, crusher = stone block that slams down.
+const CASTLE_PLAN=[
+  ['pit2','jet','pit3','foe','pit3'],
+  ['pit3','jet','plat5','foe','jet','pit3'],
+  ['cannon','pit3','cannon','jet','pit4','foe','cannon'],
+  ['crumble6','jet','pit3','foe','crumble7','jet','cannon'],
+  ['pendulum','pit3','pendulum','plat6','foe','pendulum','cannon'],
+  ['crusher','crumble7','crusher','jet','pendulum','pit4','foe','crusher','cannon'],
+  ['cannon','crusher','pendulum','crumble7','plat6','crusher','foe','pendulum','cannon','crumble8','jet']
+];
+const CASTLE_PAL=[
+  {wall:'#463c52',brick:'#5b5266',mortar:'#433b4d',bg:'#2b2233',banner:'#5b2a7a'},
+  {wall:'#3d4a3e',brick:'#56665a',mortar:'#3a463c',bg:'#1f2a22',banner:'#2f6a3a'},
+  {wall:'#2c4d58',brick:'#3d6a77',mortar:'#28454f',bg:'#132a32',banner:'#1f7a8c'},
+  {wall:'#5a3b2e',brick:'#7a5040',mortar:'#4d3226',bg:'#2e1d17',banner:'#9a3b26'},
+  {wall:'#3e4f6b',brick:'#5a6f91',mortar:'#3a4a66',bg:'#1b2538',banner:'#3d6fb8'},
+  {wall:'#2f2f36',brick:'#47474f',mortar:'#2a2a31',bg:'#151519',banner:'#8a1f2a'},
+  {wall:'#3a3670',brick:'#4f4a8f',mortar:'#35316a',bg:'#2d2a52',banner:'#c9a227'}
+];
+const SEC_W={pit2:2,pit3:3,pit4:4,plat5:5,plat6:6,jet:3,foe:5,cannon:2,crumble6:6,crumble7:7,crumble8:8,pendulum:3,crusher:3};
 function buildCastle(set,ac,rt,wi,gem,enemies,plats,jets){
-  const IW=42, fl=rt+12, bot=rt+15;
+  const fl=rt+12, bot=rt+15, plan=CASTLE_PLAN[wi], gap=wi>=4?3:4;
+  const H={cannons:[],pends:[],crushers:[],crumbles:[]};
+  let IW=6; for (const k of plan) IW+=SEC_W[k]+gap;
   for (let c=ac;c<ac+IW;c++){ set(c,rt,'X'); set(c,rt+1,'X'); for (let r=fl;r<bot;r++) set(c,r,'X'); }
   for (let r=rt;r<bot;r++) set(ac,r,'X');
-  const pw=wi>=3?4:3;
-  for (const [o,n] of [[7,pw],[16,pw+1],[27,pw],[36,3]]){
-    for (let c=ac+o;c<ac+o+n;c++) for (let r=fl;r<bot;r++) set(c,r,'L');
-    for (let i=0;i<n;i++) gem(ac+o+i, fl-3-(i>0&&i<n-1?1:0));
+  const lava=(c0,n)=>{ for (let c=c0;c<c0+n;c++) for (let r=fl;r<bot;r++) set(c,r,'L'); };
+  const FOES=['bug','turtle','beetle','beetle','spike','spike','spike'];
+  let x=ac+5;
+  for (const k of plan){
+    const n=SEC_W[k];
+    if (k.startsWith('pit')){ lava(x,n); for (let i=0;i<n;i++) gem(x+i,fl-3-(i>0&&i<n-1?1:0)); }
+    else if (k.startsWith('plat')){ lava(x,n); const p0=x*T-16, p1=(x+n)*T+16-64;
+      plats.push({x:p0,y:(fl-2)*T,w:64,h:14,axis:'x',min:p0,max:p1,dir:1,speed:55+wi*8,dx:0,dy:0,kind:'stone',zone:'castle'}); for (let i=1;i<n-1;i+=2) gem(x+i,fl-4); }
+    else if (k==='jet') jets.push({x:(x+1)*T,y:fl*T,per:2.7-wi*0.1,on:1.0,ph:RNG()*2.6,t:0,act:false,warn:false});
+    else if (k==='foe'){ enemies.push(mkEnemy(FOES[wi],(x+2)*T+4,fl*T,wi)); set(x+1,fl-4,'B'); set(x+2,fl-4,wi%2?'P':'B'); set(x+3,fl-4,'B'); }
+    else if (k==='cannon'){ set(x+1,fl-1,'Q'); H.cannons.push({c:x+1,x:(x+1)*T,y:fl*T,per:Math.max(1.9,3.2-wi*0.2),t:RNG()*2,spd:160+wi*15}); gem(x+1,fl-3); }
+    else if (k.startsWith('crumble')){ lava(x,n); for (let i=0;i<n;i++){ set(x+i,fl-1,'R'); H.crumbles.push({c:x+i,r:fl-1,t:0,gone:false}); gem(x+i,fl-3); } }
+    else if (k==='pendulum') H.pends.push({px:(x+1)*T+16,py:(rt+2)*T,len:(fl-rt-2)*T-44,amp:1.05,per:Math.max(2.1,2.7-wi*0.1),ph:RNG()*3});
+    else if (k==='crusher') H.crushers.push({x:x*T+16,w:64,h:48,top:(rt+2)*T,bottom:fl*T,per:Math.max(2.9,3.4-wi*0.08),ph:RNG()*3,y:(rt+2)*T});
+    x+=n+gap;
   }
-  const p0=(ac+16)*T-16, p1=(ac+16+pw+1)*T+16-64;
-  plats.push({x:p0,y:(fl-2)*T,w:64,h:14,axis:'x',min:p0,max:p1,dir:1,speed:55+wi*8,dx:0,dy:0,kind:'stone',zone:'castle'});
-  for (let r=fl-2;r<fl;r++) set(ac+4,r,'B');
-  for (let c=ac+11;c<ac+14;c++) set(c,fl-4,'B'); set(ac+12,fl-4,'P');
-  for (let c=ac+22;c<ac+25;c++) set(c,fl-4,'B');
-  for (const o of [13,24,33]) jets.push({x:(ac+o)*T,y:fl*T,per:2.7-wi*0.12,on:1.0,ph:RNG()*2.6,t:0,act:false,warn:false});
-  enemies.push(mkEnemy(wi>=2?'beetle':'bug',(ac+22)*T+4,fl*T,wi));
-  if (wi>=1) enemies.push(mkEnemy(wi>=4?'spike':'turtle',(ac+32)*T+4,fl*T,wi));
   for (const c of [2,3]) gem(ac+c,fl-1);
   const arena=buildArena(set,ac+IW,rt,wi);
   for (let r=fl-3;r<fl;r++) set(ac+IW,r,'.');
-  arena.castleSpawn={x:(ac+2)*T,y:fl*T-28}; arena.doorC=ac+IW; arena.fl=fl;
+  arena.castleSpawn={x:(ac+2)*T,y:fl*T-28}; arena.doorC=ac+IW; arena.fl=fl; arena.haz=H; arena.pal=CASTLE_PAL[wi]; arena.cballs=[];
+  arena.crumbleAt={}; for (const cr of H.crumbles) arena.crumbleAt[cr.c+','+cr.r]=cr;
   arena.zone={x0:ac*T,x1:(ac+IW+30)*T,y0:rt*T,y1:(rt+15)*T};
   return { arena, zone:arena.zone, width:IW+30 };
 }
@@ -1227,7 +1256,7 @@ function restartLevel(){
   S.introSub='Wrong answer, so it’s back to the start of this world'; S.timer=2.8;
 }
 const inWater=()=>!!L.th.water && zone!=='castle';
-function solid(ch){ return ch==='L'||ch==='#'||ch==='B'||ch==='X'||ch==='S'||ch==='G'||ch==='K'||ch==='P'||ch==='U'||ch==='H'||ch==='T'||ch==='F'||ch==='D'||ch==='Z'; }
+function solid(ch){ return ch==='Q'||ch==='R'||ch==='L'||ch==='#'||ch==='B'||ch==='X'||ch==='S'||ch==='G'||ch==='K'||ch==='P'||ch==='U'||ch==='H'||ch==='T'||ch==='F'||ch==='D'||ch==='Z'; }
 const isFloor=ch=>solid(ch)||ch==='C'||ch==='W';
 function tileAt(c,r){
   if (c<0||c>=L.W) return 'X';
@@ -1280,7 +1309,7 @@ function resetBoss(){
 function respawn(){
   if (S.lives<=0){ showEnd(false); return; }
   zone=checkpoint.zone; P=newPlayer(checkpoint.x,checkpoint.y); P.invuln=1;
-  if (zone==='castle'){ resetBoss(); }
+  if (zone==='castle'){ resetBoss(); resetCastleHaz(); }
   S.boulders=[]; S.rockets=[]; snapCam(); S.state='play';
 }
 function addGems(n){
@@ -1289,8 +1318,37 @@ function addGems(n){
 }
 function enterWell(){ S.state='well'; S.timer=0.6; S.wellDir='in'; }
 function exitWell(){ S.state='well'; S.timer=0.6; S.wellDir='out'; }
+function resetCastleHaz(){ const A=L.arena; A.cballs=[]; for (const cr of A.haz.crumbles){ cr.t=0; cr.gone=false; L.grid[cr.r][cr.c]='R'; } }
+function crusherY(k){ const t=((time+k.ph)%k.per+k.per)%k.per, lo=k.bottom-k.h, d=lo-k.top;
+  if (t<1.3) return k.top; if (t<1.7) return k.top+Math.sin(t*70)*2; if (t<1.85) return k.top+d*((t-1.7)/0.15); if (t<2.45) return lo; return lo-d*Math.min(1,(t-2.45)/(k.per-2.45)); }
+function pendPos(pd){ const a=pd.amp*Math.sin(2*Math.PI*(time+pd.ph)/pd.per); return {a,x:pd.px+Math.sin(a)*pd.len,y:pd.py+Math.cos(a)*pd.len}; }
+function circHit(cx,cy,r,o){ const nx=Math.max(o.x,Math.min(cx,o.x+o.w)), ny=Math.max(o.y,Math.min(cy,o.y+o.h)); return (nx-cx)**2+(ny-cy)**2<r*r; }
+function updCastleHaz(dt){
+  const A=L.arena, H=A.haz;
+  for (const c of H.cannons){ c.t+=dt; if (c.t>=c.per){ c.t=0; A.cballs.push({x:c.x-20,y:c.y-15,r:13,vx:-c.spd,dist:0});
+    if (Math.abs(c.x-camX-VIEW_W/2)<VIEW_W*0.7){ sfx('boom'); burst(c.x-4,c.y-16,'#cfcfcf',8); } } }
+  for (const b of A.cballs){
+    b.x+=b.vx*dt; b.dist+=Math.abs(b.vx*dt);
+    const box={x:b.x-b.r+2,y:b.y-b.r+2,w:2*b.r-4,h:2*b.r-4};
+    if (b.dist>14*T || hitTiles(box,false)){ b.dead=true; burst(b.x,b.y,'#6a6a72',8); continue; }
+    if (P.invuln<=0 && circHit(b.x,b.y,b.r,P)){
+      if (P.vy>0 && P.y+P.h<b.y-2){ P.vy=-480; b.dead=true; S.score+=100; sfx('stomp'); burst(b.x,b.y,'#6a6a72',10); }
+      else { hurt(); if (S.state!=='play') return; }
+    }
+  }
+  A.cballs=A.cballs.filter(b=>!b.dead);
+  for (const pd of H.pends){ const q=pendPos(pd); if (circHit(q.x,q.y+8,17,P)){ hurt(); if (S.state!=='play') return; } }
+  for (const k of H.crushers){ k.y=crusherY(k); if (overlap(P,{x:k.x+3,y:k.y,w:k.w-6,h:k.h})){ hurt(); if (S.state!=='play') return; } }
+  const feet=Math.floor((P.y+P.h+1)/T), f0=Math.floor((P.x+3)/T), f1=Math.floor((P.x+P.w-4)/T);
+  for (const cr of H.crumbles){
+    if (cr.gone) continue;
+    if (!cr.t && P.onGround && feet===cr.r && cr.c>=f0 && cr.c<=f1) cr.t=0.001;
+    if (cr.t){ cr.t+=dt; if (cr.t>0.45){ cr.gone=true; L.grid[cr.r][cr.c]='.'; sfx('break');
+      const pl=A.pal; for (let i=0;i<3;i++) parts.push({x:cr.c*T+6+i*10,y:cr.r*T+10,vx:(i-1)*40,vy:-120-Math.random()*60,life:0.9,kind:'chunk',color:i%2?pl.brick:pl.mortar,rot:0,spin:(i-1)*6}); } }
+  }
+}
 function enterCastle(){
-  zone='castle'; const A=L.arena;
+  zone='castle'; const A=L.arena; resetCastleHaz();
   P=newPlayer(A.castleSpawn.x,A.castleSpawn.y); checkpoint={...A.castleSpawn,zone:'castle'};
   resetBoss(); A.boss.active=false; S.boulders=[]; S.rockets=[]; snapCam();
   S.state='intro'; S.timer=2.4; setMusic('castle');
@@ -1449,6 +1507,7 @@ function update(dt){
     const h=hitTiles(r,true,pb,vyb);
     if (h){ if (vyb>0){ r.y=h.r*T-r.h; r.vy=-300; if (++r.b>3) r.life=0; } else r.life=0; }
     for (const e of L.enemies){ if (!e.dead && e.type!=='jelly' && r.life>0 && overlap(r,e)){ hitEnemy(e); r.life=0; burst(r.x+6,r.y+5,'#8fe36b',6); } }
+    if (zone==='castle') for (const cb of L.arena.cballs){ if (r.life>0 && !cb.dead && circHit(cb.x,cb.y,cb.r,r)){ cb.dead=true; r.life=0; burst(cb.x,cb.y,'#6a6a72',8); S.score+=50; } }
     for (const b of S.boulders){ if (r.life>0 && b.life>0 && overlap(r,b)){ b.life=0; r.life=0; burst(b.x+9,b.y+9,'#9aa0a8',8); } }
     if (zone==='castle'){ const B=L.arena.boss; if (r.life>0 && !B.dead && overlap(r,B)){ r.life=0; burst(r.x+6,r.y+5,'#8fe36b',6); if (B.inv<=0){ sfx('bosshit'); B.hp-=1; B.inv=0.15; S.score+=30; if (B.hp<=0) bossDie(B); } } }
   }
@@ -1493,6 +1552,7 @@ function update(dt){
       if (j.act && overlap(P,{x:j.x+8,y:j.y-3*T+10,w:T-16,h:3*T-10})) hurt(); }
     if (S.state!=='play') return;
     const A=L.arena, B=A.boss;
+    if (!B.active){ updCastleHaz(dt); if (S.state!=='play') return; }
     if (!B.active && P.x>(A.ac+1)*T){ B.active=true; for (let r=A.fl-3;r<A.fl;r++) L.grid[r][A.doorC]='X'; checkpoint={...A.spawn,zone:'castle'}; sfx('door'); S.toast={text:'The door slams shut behind you!',t:2}; }
     updBoss(dt);
   }
@@ -1914,13 +1974,13 @@ function drawSkyWorldBg(){
 function drawBackground(){
   const th=L.th;
   if (zone==='castle'){
-    ctx.fillStyle=th.skyWorld?'#2d2a52':'#2b2233'; ctx.fillRect(0,0,VIEW_W,VIEW_H);
+    const CP=L.arena.pal; ctx.fillStyle=CP.bg; ctx.fillRect(0,0,VIEW_W,VIEW_H);
     ctx.fillStyle='rgba(0,0,0,.22)';
     for (let r=0;r<20;r++) for (let i=-1;i<22;i++){ const x=i*48+(r%2?24:0)-(camX*0.5%48); ctx.fillRect(x,r*24,46,2); ctx.fillRect(x,r*24,2,24); }
     // banners and arched windows
     for (let i=-1;i<5;i++){ const x=i*260-(camX*0.5%260)+120; ctx.fillStyle='#1a1424'; ctx.beginPath(); ctx.moveTo(x,250); ctx.lineTo(x,170); ctx.arc(x+26,170,26,Math.PI,0); ctx.lineTo(x+52,250); ctx.fill();
       ctx.fillStyle='rgba(120,160,255,.12)'; ctx.fillRect(x+6,170,40,78);
-      ctx.fillStyle='#5b2a7a'; ctx.fillRect(x+110,80,36,110); ctx.beginPath(); ctx.moveTo(x+110,190); ctx.lineTo(x+128,175); ctx.lineTo(x+146,190); ctx.fill(); ctx.fillStyle='#f3c14b'; ctx.fillRect(x+124,110,8,8); }
+      ctx.fillStyle=CP.banner; ctx.fillRect(x+110,80,36,110); ctx.beginPath(); ctx.moveTo(x+110,190); ctx.lineTo(x+128,175); ctx.lineTo(x+146,190); ctx.fill(); ctx.fillStyle='#f3c14b'; ctx.fillRect(x+124,110,8,8); }
     const lg=ctx.createLinearGradient(0,VIEW_H*0.35,0,VIEW_H); lg.addColorStop(0,'rgba(255,80,20,0)'); lg.addColorStop(1,'rgba(255,90,20,'+(0.38+0.06*Math.sin(time*2))+')'); ctx.fillStyle=lg; ctx.fillRect(0,0,VIEW_W,VIEW_H);
     for (let i=0;i<30;i++){ const x=((i*97+Math.sin(time+i)*10)%VIEW_W+VIEW_W)%VIEW_W, y=((i*61-time*30*(1+i%3))%VIEW_H+VIEW_H)%VIEW_H; ctx.fillStyle=i%2?'rgba(255,150,60,.75)':'rgba(255,210,90,.6)'; ctx.fillRect(x,y,3,3); }
     return;
@@ -2080,8 +2140,8 @@ function drawDecor(){
 /* ---------- tiles ---------- */
 function drawBlock(ch,c,r,x,y,style){
   if (style==='castle'){
-    ctx.fillStyle='#5b5266'; ctx.fillRect(x,y,T,T);
-    ctx.fillStyle='#433b4d'; ctx.fillRect(x,y+15,T,2); ctx.fillRect(x+15,y,2,15); ctx.fillRect(x+7,y+17,2,15); ctx.fillRect(x+23,y+17,2,15);
+    ctx.fillStyle=L.arena.pal.brick; ctx.fillRect(x,y,T,T);
+    ctx.fillStyle=L.arena.pal.mortar; ctx.fillRect(x,y+15,T,2); ctx.fillRect(x+15,y,2,15); ctx.fillRect(x+7,y+17,2,15); ctx.fillRect(x+23,y+17,2,15);
   } else if (style==='wood'){
     ctx.fillStyle='#a8743f'; ctx.fillRect(x,y,T,T); ctx.fillStyle='#8f602f'; ctx.fillRect(x+3,y+10,T-6,2); ctx.fillRect(x+3,y+20,T-6,2);
     ctx.fillStyle='#5e3c1d'; ctx.fillRect(x,y,T,3); ctx.fillRect(x,y+T-3,T,3); ctx.fillRect(x,y,3,T); ctx.fillRect(x+T-3,y,3,T);
@@ -2138,19 +2198,30 @@ function popH(c){
   if (t<0.15) return t/0.15; if (t<1.2) return 1; if (t<1.4) return 1-(t-1.2)/0.2;
   return t>per-0.45 ? 0.15 : 0;
 }
+// Spikes match their world but keep a dark outline so they always stand out:
+// thorns in the woods and valley, sharp sandstone shards in the canyon, ice spikes in the snow, quartz crystals on the peak.
+const SPIKE_STYLE={forest:'thorn',valley:'thorn',canyon:'shard',snow:'ice',peak:'crystal'};
+const SPIKE_COL={thorn:['#f3e6c4','#bfa576','#2b1d10'],shard:['#d0703e','#7e3416','#2a1006'],ice:['#f2fbff','#86c8ea','#1d5b85'],crystal:['#f6f6fa','#a3a8b8','#16171c']};
 function drawSpikes(x,y,h,moving){
-  const base=y+T-4;
-  if (moving){ ctx.fillStyle='#2a2d35'; ctx.fillRect(x,base,T,4); ctx.fillStyle='#f3c14b'; for (let i=0;i<T;i+=8) ctx.fillRect(x+i,base+1,4,2); }
-  else { ctx.fillStyle='#2a2d35'; ctx.fillRect(x,base,T,4); }
-  if (h<=0.02) { ctx.fillStyle='#111317'; for (let i=0;i<3;i++) ctx.fillRect(x+3+i*11,base-1,6,2); return; }
-  const top=base-26*h-2, shake=moving&&h<0.3?Math.sin(time*60)*1:0;
-  ctx.save(); ctx.beginPath(); ctx.rect(x-2,y-4,T+4,base-y+4); ctx.clip();
-  for (let i=0;i<3;i++){ const sx=x+i*11+0.5+shake, mx=sx+5.5;
-    ctx.fillStyle='#eef2f7'; ctx.beginPath(); ctx.moveTo(sx,base); ctx.lineTo(mx,top); ctx.lineTo(mx,base); ctx.fill();
-    ctx.fillStyle='#9aa3b1'; ctx.beginPath(); ctx.moveTo(mx,top); ctx.lineTo(sx+11,base); ctx.lineTo(mx,base); ctx.fill();
-    ctx.strokeStyle='#14161b'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(sx,base); ctx.lineTo(mx,top); ctx.lineTo(sx+11,base); ctx.stroke();
-    ctx.fillStyle='#e53935'; ctx.beginPath(); ctx.moveTo(mx,top); ctx.lineTo(mx-2.2,top+6); ctx.lineTo(mx+2.2,top+6); ctx.fill(); }
-  ctx.restore();
+  const st=SPIKE_STYLE[L.th.scene]||'thorn', [lt,dk,ol]=SPIKE_COL[st], base=y+T-3;
+  if (moving){ ctx.fillStyle='rgba(0,0,0,.6)'; for (let i=0;i<3;i++){ ctx.beginPath(); ctx.ellipse(x+6+i*11,base,6,3,0,0,7); ctx.fill(); } }
+  if (h>0.02){
+    const top=base-26*h-2, shake=moving&&h<0.3?Math.sin(time*60):0;
+    ctx.save(); ctx.beginPath(); ctx.rect(x-3,y-4,T+6,base-y+5); ctx.clip();
+    for (let i=0;i<3;i++){
+      const sx=x+i*11+0.5+shake, w=st==='crystal'?9:11, hs=st==='shard'||st==='crystal'?[0.8,1,0.7][i]:st==='thorn'?[0.85,1,0.9][i]:1;
+      const tt=base-(base-top)*hs, mx=sx+w/2+(st==='thorn'?(i-1)*2:st==='shard'?(i-1)*3:0);
+      ctx.fillStyle=lt; ctx.beginPath(); ctx.moveTo(sx,base); ctx.lineTo(mx,tt); ctx.lineTo(sx+w/2,base); ctx.fill();
+      ctx.fillStyle=dk; ctx.beginPath(); ctx.moveTo(mx,tt); ctx.lineTo(sx+w,base); ctx.lineTo(sx+w/2,base); ctx.fill();
+      ctx.strokeStyle=ol; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(sx,base); ctx.lineTo(mx,tt); ctx.lineTo(sx+w,base); ctx.stroke();
+      if (st==='ice'||st==='crystal'){ ctx.fillStyle='rgba(255,255,255,.9)'; ctx.fillRect(mx-1,tt+5,2,6); }
+    }
+    ctx.restore();
+  } else if (!moving) return;
+  if (st==='thorn'){ blob('#2f5a2a',[[x+5,base,5],[x+16,base+1,6],[x+27,base,5]]); ctx.fillStyle='#c0392b'; ctx.fillRect(x+9,base-3,3,3); ctx.fillRect(x+22,base-2,3,3); }
+  else if (st==='shard'){ ctx.fillStyle='#9a4a26'; ctx.beginPath(); ctx.ellipse(x+16,base+1,17,4,0,0,7); ctx.fill(); }
+  else if (st==='ice'){ ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.ellipse(x+16,base+1,17,4,0,0,7); ctx.fill(); ctx.strokeStyle='#9cc4de'; ctx.lineWidth=1; ctx.stroke(); }
+  else { ctx.fillStyle='#4a4a52'; ctx.beginPath(); ctx.ellipse(x+16,base+1,17,4,0,0,7); ctx.fill(); }
 }
 function drawTiles(){
   const th=L.th, c0=Math.max(0,Math.floor(camX/T)-1), c1=Math.min(L.W-1,c0+Math.ceil(VIEW_W/T)+2);
@@ -2197,7 +2268,7 @@ function drawTiles(){
       ctx.fillStyle='#ff6a1f'; ctx.fillRect(x+((c*13)%20),y+12+((c*7)%10),10,6);
       if (top){ ctx.fillStyle='#ffc23d'; ctx.fillRect(x,y+wob,T,4); if (((time*1.3+c*0.7)%2)<0.25){ ctx.fillStyle='#ffd86a'; ctx.beginPath(); ctx.arc(x+16,y+wob-3,4,0,7); ctx.fill(); } }
     } else if (ch==='X'){
-      if (inCastle){ ctx.fillStyle='#463c52'; ctx.fillRect(x,y,T,T); ctx.fillStyle='rgba(0,0,0,.25)'; ctx.fillRect(x,y+T-2,T,2); ctx.fillRect(x+((r%2)?10:24),y,2,T); continue; }
+      if (inCastle){ ctx.fillStyle=L.arena.pal.wall; ctx.fillRect(x,y,T,T); ctx.fillStyle='rgba(0,0,0,.25)'; ctx.fillRect(x,y+T-2,T,2); ctx.fillRect(x+((r%2)?10:24),y,2,T); continue; }
       ctx.fillStyle=th.stone; ctx.fillRect(x,y,T,T);
       ctx.fillStyle=th.stone2; ctx.fillRect(x,y+8+((c+r)%3)*5,T,3); ctx.fillRect(x+hash(c*3+r)*20,y+20,10,3);
       ctx.fillStyle='rgba(255,255,255,.08)'; ctx.fillRect(x+hash(c+r*5)*18,y+2+hash(r)*8,12,2);
@@ -2210,6 +2281,17 @@ function drawTiles(){
         else if (th.scene==='forest'||th.scene==='valley'){ ctx.fillStyle=th.top2; ctx.fillRect(x,y,T,7); ctx.fillStyle=th.top; ctx.fillRect(x,y,T,4); for (let k=0;k<5;k++) ctx.fillRect(x+k*6+2,y-3-hash(c+k)*3,2,4); }
         else { ctx.fillStyle='rgba(255,255,255,.18)'; ctx.fillRect(x,y,T,3); }
       }
+    } else if (ch==='Q'){
+      ctx.fillStyle='#4a3424'; ctx.fillRect(x+4,y+18,26,10); ctx.fillStyle='#2b2b30'; ctx.beginPath(); ctx.arc(x+10,y+28,5,0,7); ctx.arc(x+24,y+28,5,0,7); ctx.fill();
+      ctx.fillStyle='#30333b'; ctx.beginPath(); ctx.arc(x+22,y+14,11,0,7); ctx.fill(); ctx.fillRect(x-4,y+6,26,16);
+      ctx.fillStyle='#4a4f5a'; ctx.fillRect(x-6,y+4,6,20); ctx.fillStyle='#0c0d10'; ctx.fillRect(x-6,y+9,3,10);
+      ctx.fillStyle='rgba(255,255,255,.18)'; ctx.fillRect(x,y+8,20,3);
+      const cn=L.arena.haz.cannons.find(k=>k.c===c); if (cn && cn.per-cn.t<0.5){ ctx.fillStyle=`rgba(255,140,40,${0.5+0.5*Math.sin(time*40)})`; ctx.beginPath(); ctx.arc(x+30,y+8,3,0,7); ctx.fill(); }
+    } else if (ch==='R'){
+      const cr=L.arena.crumbleAt[c+','+r], sh=cr&&cr.t?Math.sin(time*80)*2:0, pl=L.arena.pal;
+      ctx.fillStyle=pl.brick; ctx.fillRect(x+sh,y,T,18); ctx.fillStyle=pl.mortar; ctx.fillRect(x+sh,y+16,T,3); ctx.fillRect(x+15+sh,y,2,16);
+      ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x+6+sh,y+2); ctx.lineTo(x+10+sh,y+9); ctx.lineTo(x+7+sh,y+15); ctx.moveTo(x+24+sh,y+3); ctx.lineTo(x+21+sh,y+11); ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,.15)'; ctx.fillRect(x+sh,y,T,2);
     } else if (ch==='K'){
       ctx.fillStyle='#3a3550'; ctx.fillRect(x,y,T,T);
     } else if (ch==='^'){
@@ -2388,6 +2470,24 @@ function drawRides(){
     ctx.restore();
     if (!v.used){ if (v.badge) badge(v.badge.x,v.badge.y+(v.parked?0:Math.sin(time*1.5)*3)); else badge(v.trig.x+v.trig.w/2, v.trig.y-(v.type==='balloon'?96:v.type==='gondola'?70:30)); }
   }
+}
+function drawCastleHaz(){
+  if (zone!=='castle') return;
+  const A=L.arena, H=A.haz;
+  for (const k of H.crushers){ const y=k.y!=null?k.y:k.top;
+    ctx.fillStyle='#2a2a30'; ctx.fillRect(k.x+k.w/2-10,k.top-4,20,y-k.top+4); ctx.fillStyle='#4a4a54'; for (let yy=k.top;yy<y;yy+=10) ctx.fillRect(k.x+k.w/2-10,yy,20,3);
+    ctx.fillStyle='#6d6876'; ctx.fillRect(k.x,y,k.w,k.h-8); ctx.fillStyle='#857f90'; ctx.fillRect(k.x,y,k.w,4); ctx.fillStyle='#4e4958'; ctx.fillRect(k.x,y+k.h-12,k.w,4);
+    ctx.fillStyle='#c9ccd6'; for (let i=0;i<4;i++){ ctx.beginPath(); ctx.moveTo(k.x+i*16,y+k.h-8); ctx.lineTo(k.x+i*16+8,y+k.h); ctx.lineTo(k.x+i*16+16,y+k.h-8); ctx.fill(); }
+    ctx.fillStyle='#3e3a46'; ctx.fillRect(k.x,y+14,k.w,5); ctx.fillStyle='#b9bcc6'; for (let i=0;i<4;i++) ctx.fillRect(k.x+6+i*16,y+15,3,3); }
+  for (const pd of H.pends){ const q=pendPos(pd);
+    ctx.strokeStyle='#3a3a42'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(pd.px,pd.py); ctx.lineTo(q.x,q.y); ctx.stroke();
+    ctx.fillStyle='#55555e'; ctx.beginPath(); ctx.arc(pd.px,pd.py,6,0,7); ctx.fill();
+    ctx.save(); ctx.translate(q.x,q.y); ctx.rotate(-q.a);
+    ctx.fillStyle='#d6d9e0'; ctx.beginPath(); ctx.arc(0,4,22,0.15*Math.PI,0.85*Math.PI); ctx.lineTo(0,-4); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#1d1f25'; ctx.lineWidth=2; ctx.stroke(); ctx.fillStyle='#8a8f9a'; ctx.beginPath(); ctx.arc(0,0,5,0,7); ctx.fill(); ctx.restore(); }
+  for (const b of A.cballs){ ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(b.x,A.fl*T-1,b.r,3,0,0,7); ctx.fill();
+    ctx.fillStyle='#1c1d22'; ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,7); ctx.fill(); ctx.fillStyle='rgba(255,255,255,.35)'; ctx.beginPath(); ctx.arc(b.x-4,b.y-5,4,0,7); ctx.fill();
+    ctx.fillStyle='rgba(200,200,210,.35)'; ctx.fillRect(b.x+b.r,b.y-2,10,2); ctx.fillRect(b.x+b.r+4,b.y+4,7,2); }
 }
 function drawJets(){
   if (zone!=='castle') return;
@@ -2655,7 +2755,7 @@ function render(){
   if (!L){ ctx.fillStyle='#6fc0ee'; ctx.fillRect(0,0,VIEW_W,VIEW_H); return; }
   drawBackground();
   ctx.save(); ctx.translate(-Math.round(camX),-Math.round(camY));
-  drawDecor(); drawTower(); drawTiles(); drawRides(); drawGems(); drawItems(); drawPlats(); drawJets(); drawGates(); drawArena();
+  drawDecor(); drawTower(); drawTiles(); drawRides(); drawGems(); drawItems(); drawPlats(); drawJets(); drawCastleHaz(); drawGates(); drawArena();
   for (const e of L.enemies) if (e.x>camX-40&&e.x<camX+VIEW_W+40&&e.y>camY-40&&e.y<camY+VIEW_H+40) drawEnemy(e);
   drawGoat(); drawRockets(); drawWells(); drawParts();
   ctx.restore();

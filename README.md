@@ -13,10 +13,10 @@ To share with students, turn on **GitHub Pages** (Settings → Pages → Deploy 
 - **Seven worlds:** Whispering Woods, Riverbend Valley, Coral Cove (underwater), Red Rock Canyon, Snowy Pine Ridge, Thunder Peak, and Treetops to the Clouds.
 - **Coral Cove:** an underwater world. Tap jump to swim. Stinging jellyfish cover most of the sea floor and can’t be stomped or sneezed away. Swim through gaps in coral columns and along narrow rock tunnels.
 - **Checkpoint rides:** two per world (hollow oak tunnel, zip line, raft, hot air balloon, submarine, giant sea turtle, mine cart, barrel cannon, cable car, basket lift). Students board a ride by answering a math question correctly.
-- **Castles:** a short lava-hall level, then a boss fight.
+- **Castles:** every castle has its own look and gets harder as you climb. They start with just lava pits and flame jets, then add cannons firing big cannonballs (jump over them or bounce on top), bridges that crumble under your feet, swinging axes and crushing stone blocks. The final castle uses all of them. After the hall comes a boss fight.
 - **Final world:** climb a giant tree, then cross drifting, elevator and vanishing clouds.
 - **Bricks:** jump into a brick from below to smash it and knock out any enemy standing on it.
-- **Spikes:** silver spikes with red tips, plus pop-up spikes that rise and drop on a timer, so you have to time your crossing.
+- **Spikes:** they match each world (thorny brambles, red rock shards, ice spikes, quartz crystals) with dark outlines so they’re easy to see. Some pop up and down out of holes in the ground, so you have to time your crossing.
 - **Bonus round:** 90 seconds of questions after each world earns slot machine spins.
 
 ## Math
