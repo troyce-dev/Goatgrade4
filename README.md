@@ -1,0 +1,25 @@
+# Bramble’s Summit: 4th Grade Math Climb
+
+A browser platformer where students guide Bramble the goat from the forest floor up to a castle in the clouds to rescue Professor Goat, by solving 4th grade enrichment math problems.
+
+## Play
+
+Open `index.html` in any modern browser. Nothing to install or build.
+
+To share with students, turn on **GitHub Pages** (Settings → Pages → Deploy from branch `main`, folder `/root`), then share the link it gives you.
+
+## What’s inside
+
+- **Six worlds:** Whispering Woods, Riverbend Valley, Red Rock Canyon, Snowy Pine Ridge, Thunder Peak, and Treetops to the Clouds.
+- **Checkpoint rides:** two per world (hollow oak tunnel, zip line, raft, hot air balloon, mine cart, barrel cannon, cable car, basket lift). Students board a ride by answering a math question correctly.
+- **Castles:** a short lava-hall level, then a boss fight.
+- **Final world:** climb a giant tree, then cross drifting, elevator and vanishing clouds.
+- **Bonus round:** 90 seconds of questions after each world earns slot machine spins.
+
+## Math
+
+Questions are generated fresh each time (41 question types) at three levels: Warm-up, Challenge and Brain-buster. Topics include place value, rounding, addition and subtraction, multi-digit multiplication, multiplying by 10s/100s/1000s, long division with and without remainders, factors and multiples, prime and composite numbers, powers of single-digit numbers, fractions and decimals, measurement, elapsed time, money, angles, area and perimeter, patterns, and multi-step word problems. Each answer comes with a step-by-step explanation.
+
+Questions a device has already seen are remembered in the browser so they don’t repeat.
+
+![Worlds](previews/preview-worlds.png)
