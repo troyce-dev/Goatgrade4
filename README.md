@@ -10,8 +10,9 @@ To share with students, turn on **GitHub Pages** (Settings → Pages → Deploy 
 
 ## What’s inside
 
-- **Six worlds:** Whispering Woods, Riverbend Valley, Red Rock Canyon, Snowy Pine Ridge, Thunder Peak, and Treetops to the Clouds.
-- **Checkpoint rides:** two per world (hollow oak tunnel, zip line, raft, hot air balloon, mine cart, barrel cannon, cable car, basket lift). Students board a ride by answering a math question correctly.
+- **Seven worlds:** Whispering Woods, Riverbend Valley, Coral Cove (underwater), Red Rock Canyon, Snowy Pine Ridge, Thunder Peak, and Treetops to the Clouds.
+- **Coral Cove:** an underwater world. Tap jump to swim. Stinging jellyfish cover most of the sea floor and can’t be stomped or sneezed away. Swim through gaps in coral columns and along narrow rock tunnels.
+- **Checkpoint rides:** two per world (hollow oak tunnel, zip line, raft, hot air balloon, submarine, giant sea turtle, mine cart, barrel cannon, cable car, basket lift). Students board a ride by answering a math question correctly.
 - **Castles:** a short lava-hall level, then a boss fight.
 - **Final world:** climb a giant tree, then cross drifting, elevator and vanishing clouds.
 - **Bricks:** jump into a brick from below to smash it and knock out any enemy standing on it.
@@ -25,3 +26,5 @@ Questions are generated fresh each time (41 question types) at three levels: War
 Questions a device has already seen are remembered in the browser so they don’t repeat.
 
 ![Worlds](previews/preview-worlds.png)
+
+![Coral Cove](previews/preview-coral-cove.png)

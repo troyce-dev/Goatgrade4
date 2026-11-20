@@ -157,6 +157,7 @@ sup .box{width:1em;height:1em}
       <dt>Bonus round</dt><dd>After each world, answer as many math questions as you can in 90 seconds. Each correct answer earns a slot machine spin for lives, snot rockets or coins</dd>
       <dt>Spikes</dt><dd>Silver spikes with red tips hurt! Some pop up and down out of yellow-striped plates. Wait for them to drop, then run across</dd>
       <dt>Bricks</dt><dd>Jump into a brick from below to smash it. Any enemy standing on it gets knocked out, and coins on top are yours. The flying pieces can’t hurt you</dd>
+      <dt>Swimming</dt><dd>In Coral Cove you’re underwater: tap jump to swim up. Pink jellyfish sting! Don’t touch them, even from above. Swim through the gaps in the coral and the rock tunnels</dd>
       <dt>Stomp</dt><dd>Land on enemies from above. Stomp a shellback, then kick its shell into other enemies</dd>
       <dt>Castles</dt><dd>Cross the castle’s lava halls (watch out for flame jets!), then beat the boss. Stomp it or sneeze on it to free whoever is in the cage</dd>
       <dt>The sky</dt><dd>In the last world some clouds drift side to side, some ride up and down, and the purple-striped ones vanish soon after you land on them</dd>
@@ -167,10 +168,11 @@ sup .box{width:1em;height:1em}
       <div class="opts" id="worldOpts">
         <label><input type="radio" name="world" value="0" checked> 1 · Woods</label>
         <label><input type="radio" name="world" value="1"> 2 · Valley</label>
-        <label><input type="radio" name="world" value="2"> 3 · Canyon</label>
-        <label><input type="radio" name="world" value="3"> 4 · Snowy Ridge</label>
-        <label><input type="radio" name="world" value="4"> 5 · Thunder Peak</label>
-        <label><input type="radio" name="world" value="5"> 6 · Clouds</label>
+        <label><input type="radio" name="world" value="2"> 3 · Coral Cove</label>
+        <label><input type="radio" name="world" value="3"> 4 · Canyon</label>
+        <label><input type="radio" name="world" value="4"> 5 · Snowy Ridge</label>
+        <label><input type="radio" name="world" value="5"> 6 · Thunder Peak</label>
+        <label><input type="radio" name="world" value="6"> 7 · Clouds</label>
       </div>
     </fieldset>
     <div class="row">
@@ -784,7 +786,7 @@ try { const raw = localStorage.getItem(SEEN_KEY); if (raw) seen = new Set(JSON.p
 function saveSeen(){ try { localStorage.setItem(SEEN_KEY, JSON.stringify([...seen].slice(-6000))); } catch(e) {} }
 let recentGen=[];
 const TIER_NAME=['','Warm-up','Challenge','Brain-buster'];
-const TIER_W=[[.75,.25,0],[.45,.45,.1],[.25,.5,.25],[.1,.5,.4],[0,.45,.55],[0,.3,.7]];
+const TIER_W=[[.75,.25,0],[.45,.45,.1],[.35,.5,.15],[.25,.5,.25],[.1,.5,.4],[0,.45,.55],[0,.3,.7]];
 function nextQuestion(){
   const w=TIER_W[Math.min(S&&S.world!=null?S.world:0,TIER_W.length-1)];
   let q=null;
@@ -800,18 +802,19 @@ function nextQuestion(){
 const THEMES = [
   {name:'Whispering Woods', scene:'forest', sky:['#8ec9e2','#e2f1d8'], top:'#5fa84a', top2:'#3f7d32', dirt:'#6b4a2f', dirt2:'#56391f', block:'wood', stone:'#6e6a5e', stone2:'#5a574d', spike:['#3d6b35','#2a4d25']},
   {name:'Riverbend Valley', scene:'valley', sky:['#4f9fe3','#cfe8fa'], top:'#6dbf4f', top2:'#4b9636', dirt:'#7a5636', dirt2:'#62432a', block:'cobble', stone:'#7c7e86', stone2:'#66686f', spike:['#3d6b35','#2a4d25']},
+  {name:'Coral Cove', scene:'reef', water:true, sky:['#1a86b8','#063a5c'], top:'#e8d49c', top2:'#c9b273', dirt:'#a88c58', dirt2:'#8d7447', block:'cobble', stone:'#3e6170', stone2:'#30505d', spike:['#9a9ca3','#6a6c72']},
   {name:'Red Rock Canyon', scene:'canyon', sky:['#e99a5c','#fde2bd'], top:'#e0b57c', top2:'#c69657', dirt:'#b0663b', dirt2:'#8f512d', block:'sandstone', stone:'#a45d3b', stone2:'#8a4b2f', spike:['#c9b08a','#8f7656']},
   {name:'Snowy Pine Ridge', scene:'snow', ice:true, sky:['#93aecf','#eef3fa'], top:'#fbfdff', top2:'#d3e2f1', dirt:'#5d6b7c', dirt2:'#4c5868', block:'ice', stone:'#6f7b8b', stone2:'#5c6676', spike:['#cfe9f7','#8fbcd6']},
   {name:'Thunder Peak', scene:'peak', sky:['#2f3a52','#7d8aa2'], top:'#788a63', top2:'#58684a', dirt:'#4a4640', dirt2:'#3a3732', block:'granite', stone:'#55565d', stone2:'#45464c', spike:['#9a9ca3','#6a6c72']},
   {name:'Treetops to the Clouds', scene:'sky', skyWorld:true, sky:['#7fb6f2','#e4f3ff'], top:'#5fa84a', top2:'#3f7d32', dirt:'#6b4a2f', dirt2:'#56391f', block:'wood', stone:'#8a95b8', stone2:'#77819f', spike:['#3d6b35','#2a4d25']}
 ];
 const LAST = THEMES.length-1;
-const SETS = [['bug'],['bug','turtle'],['bug','turtle','beetle'],['turtle','beetle','bug'],['turtle','beetle','spike'],['beetle','spike','turtle']];
+const SETS = [['bug'],['bug','turtle'],['fish'],['bug','turtle','beetle'],['turtle','beetle','bug'],['turtle','beetle','spike'],['beetle','spike','turtle']];
 const EDEF = { bug:{w:24,h:20,hp:1,m:1}, turtle:{w:26,h:22,hp:1,m:.8}, beetle:{w:26,h:20,hp:2,m:1}, spike:{w:24,h:20,hp:2,m:.9},
-  fish:{w:28,h:16,hp:1,m:1.1,fly:true}, bird:{w:28,h:18,hp:2,m:1.3,fly:true} };
+  fish:{w:28,h:16,hp:1,m:1.1,fly:true}, bird:{w:28,h:18,hp:2,m:1.3,fly:true}, jelly:{w:22,h:26,hp:99,m:.3,fly:true} };
 // the two "checkpoint rides" in each world (you answer a question to board them)
-const RIDES=[['tree','zip'],['raft','balloon'],['cart','cannon'],['gondola','cart'],['cannon','zip'],['lift','balloon']];
-const RIDE_LABEL={ tree:'Hollow oak tunnel: answer to step inside', zip:'Zip line: answer to clip in', raft:'River raft: answer to push off',
+const RIDES=[['tree','zip'],['raft','balloon'],['sub','turtle'],['cart','cannon'],['gondola','cart'],['cannon','zip'],['lift','balloon']];
+const RIDE_LABEL={ sub:'Submarine: answer to dive through the reef cave', turtle:'Giant sea turtle: answer to ride through the cave', tree:'Hollow oak tunnel: answer to step inside', zip:'Zip line: answer to clip in', raft:'River raft: answer to push off',
   balloon:'Hot air balloon: answer to take off', cart:'Mine cart: answer to ride through the mountain', cannon:'Barrel cannon: answer to blast off',
   gondola:'Cable car: answer to climb aboard', lift:'Treetop basket lift: answer to ride up' };
 const DECOR_SET={
@@ -819,7 +822,8 @@ const DECOR_SET={
   valley:[['oak',2,1],['birch',2,1],['bush',2],['flowers',4],['tallgrass',3],['rock',1],['fence',2]],
   canyon:[['cactus',3],['rock',3],['shrub',3],['drygrass',2],['boulder',1]],
   snow:[['snowpine',5,1],['snowrock',2],['snowbush',2]],
-  peak:[['rock',3],['boulder',2],['alpflower',3],['deadtree',1,1],['drygrass',1]] };
+  peak:[['rock',3],['boulder',2],['alpflower',3],['deadtree',1,1],['drygrass',1]],
+  reef:[['kelp',5],['coral',4],['anemone',2],['shell',2],['rock',1]] };
 
 function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 let RNG = Math.random;
@@ -839,7 +843,7 @@ function buildArena(set, ac, rt, wi){
   for (let c=ac;c<ac+30;c++) for (let r=rt;r<rt+15;r++) if (r<rt+2 || r>=rt+12 || c===ac || c===ac+29) set(c,r,(r>=rt+12&&lavaCol(c))?'L':'X');
   for (let i=0;i<4;i++){ set(ac+5+i,rt+9,'B'); set(ac+20+i,rt+9,'B'); }
   for (let i=0;i<3;i++) set(ac+13+i,rt+7,'B');
-  const final = wi===LAST, stomps=[3,3,4,4,5,6][wi];
+  const final = wi===LAST, stomps=[3,3,3,4,4,5,6][wi];
   const bw=final?76:60, bh=final?62:52;
   const home={x:(ac+17)*T, y:(rt+12)*T-bh};
   const boss={x:home.x,y:home.y,w:bw,h:bh,vx:0,vy:0,dir:-1,hp:stomps*3,maxHp:stomps*3,inv:0,jumpT:2.5,throwT:2,dead:false,deadT:0,final,active:false,
@@ -908,19 +912,42 @@ function buildNormal(wi){
     blocks(){ ground(x,10); const pc=x+3+lri(0,3); for (let c=x+3;c<=x+6;c++){ if (c===pc && RNG()<.55) set(c,8,'P'); else { set(c,8,'B'); gem(c,7); } } if (wi>=1) enemy(x+7); x+=10; },
     mover(){ if (wi===0){ F.gap(); return; } const g=7, x0=x;
       plats.push({x:x0*T+8,y:GR*T-16,w:80,h:14,axis:'x',min:x0*T+8,max:(x0+g)*T-88,dir:1,speed:70+wi*12,dx:0,dy:0}); x+=g; ground(x,3); x+=3; },
-    birds(){ ground(x,12); enemy(x+4,'bird'); enemy(x+9,'bird'); for (let i=2;i<11;i+=2) gem(x+i,10); x+=12; }
+    birds(){ ground(x,12); enemy(x+4,'bird'); enemy(x+9,'bird'); for (let i=2;i<11;i+=2) gem(x+i,10); x+=12; },
+    // --- underwater segments (Coral Cove). Jellyfish are added over the open sea floor afterwards. ---
+    jellies(){ const n=lri(10,14); ground(x,n); for (let i=2;i<n-1;i+=3) gem(x+i,lri(4,7)); x+=n; },
+    gateCol(){ ground(x,9); const c=x+4, k=lri(3,7);
+      for (let cc=c;cc<c+2;cc++){ for (let r=0;r<k;r++) set(cc,r,'X'); for (let r=k+3;r<GR;r++) set(cc,r,'X'); }
+      gem(c,k+1); gem(c+1,k+1); gem(c-2,k+1); gem(c+3,k+1); x+=9; },
+    tunnel(){ const n=lri(7,10), top=lri(2,4); ground(x,n+4);
+      for (let c=x+2;c<x+2+n;c++){ for (let r=0;r<top;r++) set(c,r,'X'); for (let r=top+4;r<GR;r++) set(c,r,'X'); }
+      for (let c=x+3;c<x+1+n;c+=2) gem(c,top+2);
+      if (n>=9) enemies.push(mkEnemy('fish',(x+2+Math.floor(n/2))*T,(top+3)*T,wi)); x+=n+4; },
+    kelpbed(){ ground(x,10); for (let i=0;i<5;i++) gem(x+2+i*1.5,5-Math.round(Math.sin(i/4*Math.PI)*2)); x+=10; },
+    school(){ ground(x,12); enemy(x+4,'fish'); enemy(x+8,'fish'); for (let i=2;i<11;i+=3) gem(x+i,lri(3,6)); x+=12; },
+    rings(){ ground(x,10); const cx=x+5, cy=lri(4,6); for (let a=0;a<8;a++) gems.push({x:cx*T+16+Math.cos(a*Math.PI/4)*46,y:cy*T+16+Math.sin(a*Math.PI/4)*46,got:false}); x+=10; }
   };
   const pool=['flat','gap','stairs','pillar','floaters','spikes','popSpikes','enemies','blocks'];
   if (wi>=2) pool.push('popSpikes');
   if (wi>=1) pool.push('mover','enemies','gap');
   if (wi>=2) pool.push('floaters','spikes','mover');
-  if (wi>=3) pool.push('birds');
+  if (wi>=4) pool.push('birds');
+  if (th.water){ pool.length=0; pool.push('jellies','gateCol','tunnel','kelpbed','school','jellies','gateCol','tunnel','rings'); }
   let last='';
   const run=until=>{ while (x<until){ let k; do { k=lpick(pool); } while (k===last); last=k; F[k](); } };
 
   // a checkpoint ride: a wall or a wide chasm you can only cross by answering a question
   const barrier=type=>{
     const gy=GR*T, x0=x; let v;
+    if (type==='sub'||type==='turtle'){
+      // a reef wall from the sea floor to the surface, with a cave the ride swims through
+      ground(x0,20); for (let c=x0;c<x0+20;c++) busy.add(c);
+      const wc=x0+9, my=8*T, hx=(x0+5)*T;
+      for (let c=wc;c<wc+3;c++) for (let r=0;r<GR;r++) set(c,r,'X');
+      const wall={x0:wc*T,y0:0,x1:(wc+3)*T,y1:GR*T};
+      v={home:{x:hx,y:my}, trig:{x:hx-36,y:0,w:wc*T-(hx-36),h:GR*T}, badge:{x:hx,y:my-78}, path:[[hx,my],[(wc+6)*T,my]], dur:type==='sub'?3:3.6,
+        clip:{x0:wall.x0+24,x1:wall.x1-24,y0:0,y1:GR*T}, exit:{x:(wc+7)*T+10,y:my}, cave:my, wall};
+      x+=20; v.type=type; rides.push(v); return;
+    }
     if (type==='tree'||type==='cart'||type==='balloon'||type==='cannon'){
       ground(x0,20); for (let c=x0;c<x0+20;c++) busy.add(c);
       const wc=x0+9, top=3;
@@ -971,6 +998,13 @@ function buildNormal(wi){
     decor.push({c,x:c*T+lri(6,26),kind:it[0],s:0.8+RNG()*0.45,v:RNG()});
   }
   decor.sort((a,b)=>(DECOR_BIG[b.kind]?1:0)-(DECOR_BIG[a.kind]?1:0));
+  // Coral Cove: jellyfish hover over most of the open sea floor
+  if (th.water){
+    for (let c=14;c<endCol-1;c++){
+      if (busy.has(c) || grid[GR][c]!=='#' || grid[GR-1][c]!==undefined) continue;
+      if (RNG()<0.92){ enemies.push(mkEnemy('jelly',c*T+5,GR*T-lri(6,40),wi)); c+=1; }
+    }
+  }
   const W=AC+castle.width;
   finishGrid(grid,W);
   return { grid, H, W, gems, enemies, plats, gates:[], wells:[], rides, decor, waters, jets, door, tower, endCol, arena:castle.arena, pops, popPer:2.8-wi*0.08,
@@ -1131,7 +1165,7 @@ function sfx(name){
 const OW_MEL=[72,0,76,79, 81,0,79,76, 74,0,76,77, 79,0,0,0,  77,0,76,74, 72,0,74,76, 71,0,72,74, 72,0,0,0,
               79,81,79,77, 76,0,72,0, 74,76,77,79, 81,0,79,0,  77,76,74,72, 71,0,67,0, 69,71,72,74, 72,0,0,0];
 const OW_BASS=[48,55,45,52,50,57,43,50, 41,48,48,55,43,50,48,55, 48,55,45,52,50,57,43,50, 41,48,43,50,41,48,48,55];
-const WORLD_MUS=[{tempo:150,wave:'square',tr:0},{tempo:138,wave:'square',tr:-2},{tempo:126,wave:'triangle',tr:2},{tempo:104,wave:'sine',tr:-5},{tempo:158,wave:'sawtooth',tr:-3},{tempo:140,wave:'triangle',tr:5}];
+const WORLD_MUS=[{tempo:150,wave:'square',tr:0},{tempo:138,wave:'square',tr:-2},{tempo:100,wave:'sine',tr:0},{tempo:126,wave:'triangle',tr:2},{tempo:104,wave:'sine',tr:-5},{tempo:158,wave:'sawtooth',tr:-3},{tempo:140,wave:'triangle',tr:5}];
 // spooky castle theme: diminished arpeggios over a dissonant drone and a heartbeat
 const CASTLE_ARP=[57,60,63,66, 60,63,66,69, 56,59,62,65, 59,62,65,68, 55,58,61,64, 58,61,64,67, 56,59,62,65, 62,61,60,59];
 function setMusic(kind,w){
@@ -1414,7 +1448,7 @@ function update(dt){
     const pb=r.y+r.h, vyb=r.vy; r.y+=r.vy*dt;
     const h=hitTiles(r,true,pb,vyb);
     if (h){ if (vyb>0){ r.y=h.r*T-r.h; r.vy=-300; if (++r.b>3) r.life=0; } else r.life=0; }
-    for (const e of L.enemies){ if (!e.dead && r.life>0 && overlap(r,e)){ hitEnemy(e); r.life=0; burst(r.x+6,r.y+5,'#8fe36b',6); } }
+    for (const e of L.enemies){ if (!e.dead && e.type!=='jelly' && r.life>0 && overlap(r,e)){ hitEnemy(e); r.life=0; burst(r.x+6,r.y+5,'#8fe36b',6); } }
     for (const b of S.boulders){ if (r.life>0 && b.life>0 && overlap(r,b)){ b.life=0; r.life=0; burst(b.x+9,b.y+9,'#9aa0a8',8); } }
     if (zone==='castle'){ const B=L.arena.boss; if (r.life>0 && !B.dead && overlap(r,B)){ r.life=0; burst(r.x+6,r.y+5,'#8fe36b',6); if (B.inv<=0){ sfx('bosshit'); B.hp-=1; B.inv=0.15; S.score+=30; if (B.hp<=0) bossDie(B); } } }
   }
@@ -1427,8 +1461,8 @@ function update(dt){
     e.flash=Math.max(0,e.flash-dt); e.kick=Math.max(0,e.kick-dt);
     if (e.fly){
       e.t+=dt; const ox=e.x; e.x+=e.dir*e.speed*dt;
-      if (hitTiles(e,false) || Math.abs(e.x-e.homeX)>5*T){ e.x=ox; e.dir*=-1; }
-      e.y=e.baseY+Math.sin(e.t*2.2)*(e.type==='bird'?26:18);
+      if (hitTiles(e,false) || Math.abs(e.x-e.homeX)>(e.type==='jelly'?1.2:5)*T){ e.x=ox; e.dir*=-1; }
+      e.y=e.baseY+Math.sin(e.t*(e.type==='jelly'?1.5:2.2))*(e.type==='bird'?26:e.type==='jelly'?20:18);
     } else if (e.shell){
       e.vy=Math.min(MAX_FALL,e.vy+GRAV*dt);
       const v=e.vx; moveEntity(e,dt); if (e.hitWall) e.vx=-v;
@@ -1447,7 +1481,7 @@ function update(dt){
       if (e.vx===0){ const kd=(P.x+P.w/2<e.x+e.w/2)?1:-1; e.vx=kd*420; e.kick=0.3; e.x+=kd*8; if (stomp) P.vy=-420; }
       else if (stomp){ e.vx=0; e.shellT=0; P.vy=-460; sfx('stomp'); }
       else if (e.kick<=0) hurt();
-    } else if (stomp && e.type!=='spike'){
+    } else if (stomp && e.type!=='spike' && e.type!=='jelly'){
       P.vy=-460; S.score+=50; sfx('stomp');
       if (e.type==='turtle') toShell(e); else { e.hp--; e.flash=0.35; if (e.hp<=0) killEnemy(e); else e.speed*=1.3; }
     } else hurt();
@@ -1693,7 +1727,7 @@ function showEnd(won){
   S.state='end'; setMusic(null); sfx(won?'win':'die');
   document.getElementById('endTitle').textContent=won?'Professor Goat is free!':'Out of lives';
   document.getElementById('endText').textContent=won
-    ? 'Bramble climbed all six worlds, beat Baron Tusker in the sky castle and rescued Professor Goat. Every ride you took and every door you opened was a math problem you solved.'
+    ? 'Bramble climbed all seven worlds, beat Baron Tusker in the sky castle and rescued Professor Goat. Every ride you took and every door you opened was a math problem you solved.'
     : `Bramble ran out of lives in World ${S.world+1}. You can start this world again with fresh lives.`;
   document.getElementById('endStats').innerHTML=statsHTML();
   const act=document.getElementById('endActions'); act.innerHTML='';
@@ -1918,6 +1952,23 @@ function drawBackground(){
     for (let sx=0;sx<=VIEW_W;sx+=8){ const y=VIEW_H-52+Math.sin((sx+camX*0.3)*0.01)*6; if (sx===0) ctx.moveTo(sx,y); else ctx.lineTo(sx,y); }
     for (let sx=VIEW_W;sx>=0;sx-=8){ ctx.lineTo(sx,VIEW_H-44+Math.sin((sx+camX*0.3)*0.01)*6); } ctx.fill();
     ridge('#5f9c4b',VIEW_H-15,30,0.5,0.012,3);
+  } else if (sc==='reef'){
+    ctx.save(); ctx.globalCompositeOperation='lighter';
+    for (let i=0;i<5;i++){ const x=((i*230-camX*0.2)%1150+1150)%1150-100; ctx.fillStyle=`rgba(170,225,255,${0.05+0.03*Math.sin(time*0.8+i)})`;
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x+60,0); ctx.lineTo(x+210,VIEW_H); ctx.lineTo(x+120,VIEW_H); ctx.fill(); }
+    ctx.restore();
+    ridge('#0e5577',VIEW_H-120,90,0.1,0.007,3);
+    ctx.strokeStyle='#0d4c66'; ctx.lineWidth=6; ctx.lineCap='round'; ctx.beginPath();
+    for (let i=0;i<14;i++){ const bx=((i*97-camX*0.22)%1360+1360)%1360-200, h=90+hash(i)*90; ctx.moveTo(bx,VIEW_H-60);
+      for (let k=1;k<=6;k++) ctx.lineTo(bx+Math.sin(time*1.2+i+k*0.7)*8,VIEW_H-60-h*k/6); } ctx.stroke(); ctx.lineCap='butt';
+    ridge('#0a405a',VIEW_H-55,60,0.3,0.011,5);
+    ctx.fillStyle='rgba(10,60,85,.8)'; for (let i=0;i<6;i++){ const fx=((i*260+time*(25+i*6)-camX*0.35)%1300+1300)%1300-170, fy=90+hash(i*3)*170;
+      ctx.beginPath(); ctx.ellipse(fx,fy,12,5,0,0,7); ctx.moveTo(fx-10,fy); ctx.lineTo(fx-18,fy-5); ctx.lineTo(fx-18,fy+5); ctx.fill(); }
+    ctx.strokeStyle='rgba(220,245,255,.45)'; ctx.lineWidth=1.5;
+    for (let i=0;i<22;i++){ const bx=((hash(i*7)*VIEW_W-camX*0.5)%VIEW_W+VIEW_W)%VIEW_W+Math.sin(time*2+i)*4, by=VIEW_H-((time*(30+hash(i)*30)+hash(i*3)*VIEW_H)%VIEW_H);
+      ctx.beginPath(); ctx.arc(bx,by,2+hash(i*5)*3,0,7); ctx.stroke(); }
+    ctx.fillStyle='rgba(210,245,255,.35)'; ctx.beginPath(); ctx.moveTo(0,0);
+    for (let sx=0;sx<=VIEW_W;sx+=12) ctx.lineTo(sx,14+Math.sin((sx+camX*0.8)*0.03+time*2)*4); ctx.lineTo(VIEW_W,0); ctx.fill();
   } else if (sc==='canyon'){
     sun(720,90,75,'255,240,200');
     skyClouds(3,0.05,40,110,0.8,0.6,5,11);
@@ -1997,6 +2048,18 @@ const DECOR={
     ctx.fillStyle='#3d6f2e'; ctx.fillRect(x-1,y-h,2,h); ctx.fillStyle='#6aa850'; ctx.fillRect(x-5*s,y-h+2,2,h-4); },
   deadtree(x,y,s){ ctx.strokeStyle='#6d6660'; ctx.lineCap='round'; ctx.lineWidth=7*s; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+4*s,y-90*s); ctx.stroke();
     ctx.lineWidth=4*s; ctx.beginPath(); ctx.moveTo(x+2*s,y-50*s); ctx.lineTo(x-24*s,y-80*s); ctx.moveTo(x+3*s,y-70*s); ctx.lineTo(x+28*s,y-100*s); ctx.moveTo(x-14*s,y-68*s); ctx.lineTo(x-20*s,y-96*s); ctx.stroke(); ctx.lineCap='butt'; },
+  kelp(x,y,s,v){ ctx.strokeStyle='#2f8f5b'; ctx.lineWidth=4; ctx.lineCap='round';
+    for (let k=0;k<3;k++){ const h=(60+k*22)*s, bx=x-8+k*8; ctx.beginPath(); ctx.moveTo(bx,y);
+      for (let i=1;i<=6;i++) ctx.lineTo(bx+Math.sin(time*1.6+v*6+k+i*0.6)*5*i/6,y-h*i/6); ctx.stroke();
+      ctx.fillStyle='#3fa76a'; for (let i=2;i<=5;i++){ ctx.beginPath(); ctx.ellipse(bx+Math.sin(time*1.6+v*6+k+i*0.6)*5*i/6+4,y-h*i/6,5,2.5,0.5,0,7); ctx.fill(); } }
+    ctx.lineCap='butt'; },
+  coral(x,y,s,v){ const col=['#ff7f6e','#f6a04d','#c86bd6'][Math.floor(v*3)]; ctx.strokeStyle=col; ctx.lineCap='round'; ctx.lineWidth=6*s; ctx.beginPath();
+    ctx.moveTo(x,y); ctx.lineTo(x,y-22*s); ctx.lineTo(x-12*s,y-36*s); ctx.moveTo(x,y-22*s); ctx.lineTo(x+10*s,y-40*s); ctx.moveTo(x,y-12*s); ctx.lineTo(x+14*s,y-22*s); ctx.stroke();
+    ctx.fillStyle=col; for (const [a,b] of [[-12,-36],[10,-40],[14,-22]]){ ctx.beginPath(); ctx.arc(x+a*s,y+b*s,4*s,0,7); ctx.fill(); } ctx.lineCap='butt'; },
+  anemone(x,y,s,v){ ctx.fillStyle='#8a3d7a'; ctx.fillRect(x-7*s,y-8*s,14*s,8*s); ctx.strokeStyle='#e66fc0'; ctx.lineWidth=3; ctx.lineCap='round'; ctx.beginPath();
+    for (let i=0;i<7;i++){ const a=-Math.PI/2+(i-3)*0.32; ctx.moveTo(x+(i-3)*2*s,y-8*s); ctx.lineTo(x+(i-3)*2*s+Math.cos(a+Math.sin(time*2+i)*0.2)*16*s,y-8*s+Math.sin(a)*16*s); } ctx.stroke(); ctx.lineCap='butt'; },
+  shell(x,y,s,v){ if (v<.5){ ctx.fillStyle='#f08a3c'; ctx.beginPath(); for (let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5, r=i%2?4:10; ctx.lineTo(x+Math.cos(a)*r*s,y-6+Math.sin(a)*r*s*0.6); } ctx.fill(); }
+    else { ctx.fillStyle='#f2e2c8'; ctx.beginPath(); ctx.ellipse(x,y-5,9*s,6*s,0,Math.PI,0); ctx.fill(); ctx.strokeStyle='#c9a77c'; ctx.lineWidth=1; ctx.beginPath(); for (let i=-2;i<=2;i++){ ctx.moveTo(x,y-1); ctx.lineTo(x+i*4*s,y-10*s); } ctx.stroke(); } },
   trunk(x,y,s,v,d){ const w=110, top=d.top, y0=Math.max(top,camY-20), y1=Math.min(y,camY+VIEW_H+20); if (y1<=y0) return;
     ctx.fillStyle='#5a3d26'; ctx.fillRect(x-w/2,y0,w,y1-y0);
     ctx.fillStyle='#46301d'; for (let i=0;i<7;i++){ const gx=x-w/2+8+i*15+(i%2)*4; ctx.fillRect(gx,y0,3,y1-y0); }
@@ -2056,7 +2119,7 @@ function drawGround(c,r,x,y){
     ctx.fillStyle=th.top2; ctx.fillRect(x,y+8,T,4); ctx.fillStyle=th.top; ctx.fillRect(x,y-2,T,11);
     for (let k=0;k<2;k++) if (hash(c*11+k)<.5) ctx.fillRect(x+4+k*14,y+9,5,3+hash(c+k)*5);
     if (((time*0.5+c*0.31)%3)<0.08){ ctx.fillStyle='#ffffff'; ctx.fillRect(x+12,y,2,2); }
-  } else if (sc==='canyon'){
+  } else if (sc==='canyon'||sc==='reef'){
     ctx.fillStyle=th.top2; ctx.fillRect(x,y,T,10); ctx.fillStyle=th.top; ctx.fillRect(x,y,T,7);
     ctx.fillStyle='rgba(150,100,50,.35)'; ctx.fillRect(x+3+hash(c)*10,y+3,8,1); ctx.fillRect(x+16+hash(c*2)*8,y+5,7,1);
   } else if (sc==='peak'){
@@ -2143,6 +2206,7 @@ function drawTiles(){
       if (g[r][c+1]!=='X'){ ctx.fillStyle='rgba(0,0,0,.22)'; ctx.fillRect(x+T-4,y,4,T); }
       if (r>0 && g[r-1][c]!=='X'){
         if (th.scene==='snow'){ ctx.fillStyle='#fbfdff'; ctx.fillRect(x-1,y-3,T+2,9); }
+        else if (th.scene==='reef'){ const k=hash(c*3+r); if (k<.7) blob(k<.25?'#ff7f6e':k<.5?'#c86bd6':'#f6a04d',[[x+8+k*10,y,5],[x+20,y-1,4]]); ctx.fillStyle='#4d7a5a'; ctx.fillRect(x,y,T,3); }
         else if (th.scene==='forest'||th.scene==='valley'){ ctx.fillStyle=th.top2; ctx.fillRect(x,y,T,7); ctx.fillStyle=th.top; ctx.fillRect(x,y,T,4); for (let k=0;k<5;k++) ctx.fillRect(x+k*6+2,y-3-hash(c+k)*3,2,4); }
         else { ctx.fillStyle='rgba(255,255,255,.18)'; ctx.fillRect(x,y,T,3); }
       }
@@ -2204,7 +2268,11 @@ function drawWater(w){
   ctx.fillStyle='rgba(255,255,255,.4)'; for (let i=0;i<12;i++){ const wx=w.x0+((i*41+time*40)%(w.x1-w.x0-16)); ctx.fillRect(wx,y+4+(i%3)*9,14,2); }
   ctx.fillStyle='#d8efff'; ctx.fillRect(w.x0,y,w.x1-w.x0,2);
 }
+function caveMouths(v){ const w=v.wall, y=v.cave;
+  for (const cx of [w.x0+14,w.x1-14]){ ctx.fillStyle='#24424e'; ctx.beginPath(); ctx.ellipse(cx,y-28,22,34,0,0,7); ctx.fill();
+    ctx.fillStyle='#04161f'; ctx.beginPath(); ctx.ellipse(cx,y-28,17,29,0,0,7); ctx.fill(); } }
 const RIDE_PROPS={
+  sub(v){ caveMouths(v); }, turtle(v){ caveMouths(v); },
   tree(v){ const w=v.wall, cx=(w.x0+w.x1)/2, gy=w.y1;
     ctx.fillStyle='#5a3d26'; ctx.beginPath(); ctx.moveTo(w.x0-28,gy); ctx.quadraticCurveTo(w.x0-4,gy-6,w.x0,gy-44); ctx.lineTo(w.x0+4,gy); ctx.fill();
     ctx.beginPath(); ctx.moveTo(w.x1+28,gy); ctx.quadraticCurveTo(w.x1+4,gy-6,w.x1,gy-44); ctx.lineTo(w.x1-4,gy); ctx.fill();
@@ -2238,6 +2306,25 @@ const RIDE_PROPS={
   raft(v){ const gy=GR*T; ctx.fillStyle='#6b4a2e'; ctx.fillRect(v.dock-4,gy-26,8,30); ctx.fillStyle='#8a6440'; ctx.fillRect(v.dock-6,gy-28,12,5); }
 };
 const RIDE_VEH={
+  sub(v,p,riding){ const x=p.x, y=p.y+(riding?0:Math.sin(time*1.5)*3), pr=Math.sin(time*(riding?30:6));
+    ctx.fillStyle='#c99a22'; ctx.fillRect(x-4,y-50,4,12); ctx.fillRect(x-4,y-50,12,4);
+    ctx.fillStyle='#e0aa2a'; ctx.fillRect(x-10,y-40,22,10);
+    ctx.fillStyle='#f2c53d'; ctx.beginPath(); ctx.ellipse(x,y-18,36,16,0,0,7); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.3)'; ctx.beginPath(); ctx.ellipse(x-8,y-26,20,4,0,0,7); ctx.fill();
+    ctx.fillStyle='#5f6b78'; ctx.beginPath(); ctx.ellipse(x-40,y-18,3,10*Math.abs(pr)+2,0,0,7); ctx.fill();
+    ctx.fillStyle='#4a4f5a'; ctx.beginPath(); ctx.arc(x+12,y-19,10,0,7); ctx.fill(); ctx.fillStyle='#bfe6f8'; ctx.beginPath(); ctx.arc(x+12,y-19,7.5,0,7); ctx.fill();
+    if (riding){ ctx.save(); ctx.beginPath(); ctx.arc(x+12,y-19,7.5,0,7); ctx.clip(); goatAt(x+6,y-4,1); ctx.restore(); }
+    ctx.fillStyle='#4a4f5a'; ctx.beginPath(); ctx.arc(x-12,y-19,5,0,7); ctx.fill(); ctx.fillStyle='#bfe6f8'; ctx.beginPath(); ctx.arc(x-12,y-19,3.5,0,7); ctx.fill();
+    if (riding && Math.random()<.3) parts.push({x:x-44,y:y-18,vx:-20,vy:-30,life:1,kind:'bubble'}); },
+  turtle(v,p,riding){ const x=p.x, y=p.y+(riding?0:Math.sin(time*1.3)*3), f=Math.sin(time*(riding?8:3));
+    ctx.fillStyle='#8fb46a';
+    ctx.save(); ctx.translate(x+18,y-10); ctx.rotate(0.5+f*0.4); ctx.beginPath(); ctx.ellipse(10,0,16,6,0,0,7); ctx.fill(); ctx.restore();
+    ctx.save(); ctx.translate(x-22,y-10); ctx.rotate(2.6-f*0.3); ctx.beginPath(); ctx.ellipse(8,0,11,5,0,0,7); ctx.fill(); ctx.restore();
+    ctx.beginPath(); ctx.arc(x+40,y-18,9,0,7); ctx.fill(); ctx.fillStyle='#111'; ctx.fillRect(x+43,y-21,3,3);
+    ctx.fillStyle='#5e7f34'; ctx.beginPath(); ctx.ellipse(x,y-18,36,15,0,Math.PI,0); ctx.fill(); ctx.fillRect(x-36,y-18,72,5);
+    ctx.strokeStyle='#3f5a22'; ctx.lineWidth=2; ctx.beginPath(); for (const ox of [-20,0,20]){ ctx.moveTo(x+ox-8,y-18); ctx.lineTo(x+ox-4,y-28); ctx.lineTo(x+ox+4,y-28); ctx.lineTo(x+ox+8,y-18); } ctx.stroke();
+    ctx.fillStyle='#d9c98f'; ctx.fillRect(x-34,y-14,68,3);
+    if (riding) goatAt(x-2,y-30,1); },
   tree(v,p,riding){ if (riding) goatAt(p.x,p.y,1); },
   cart(v,p,riding){ const x=p.x, y=p.y-4;
     if (riding) goatAt(x,y-10,1);
@@ -2299,7 +2386,7 @@ function drawRides(){
     if (v.clip){ ctx.beginPath(); ctx.rect(camX-200,camY-400,VIEW_W+400,VIEW_H+800); ctx.rect(v.clip.x0,v.clip.y0,v.clip.x1-v.clip.x0,v.clip.y1-v.clip.y0); ctx.clip('evenodd'); }
     RIDE_VEH[v.type](v,p,riding);
     ctx.restore();
-    if (!v.used) badge(v.trig.x+v.trig.w/2, v.trig.y-(v.type==='balloon'?96:v.type==='gondola'?70:30));
+    if (!v.used){ if (v.badge) badge(v.badge.x,v.badge.y+(v.parked?0:Math.sin(time*1.5)*3)); else badge(v.trig.x+v.trig.w/2, v.trig.y-(v.type==='balloon'?96:v.type==='gondola'?70:30)); }
   }
 }
 function drawJets(){
@@ -2402,6 +2489,14 @@ function flipDraw(e,fn){ ctx.save(); ctx.translate(Math.round(e.x+(e.dir>0?e.w:0
 function drawEnemy(e){
   if (e.dead){ if (e.squish>0){ ctx.fillStyle='rgba(255,255,255,.7)'; ctx.fillRect(e.x,e.y+e.h-6,e.w,6); } return; }
   if (e.flash>0 && Math.floor(time*24)%2) return;
+  if (e.type==='jelly'){ const x=e.x, y=e.y, pl=Math.sin(e.t*3)*1.5;
+    ctx.fillStyle='rgba(255,120,200,.18)'; ctx.beginPath(); ctx.arc(x+11,y+9,17,0,7); ctx.fill();
+    ctx.strokeStyle='rgba(255,150,210,.9)'; ctx.lineWidth=1.6; ctx.beginPath();
+    for (let k=0;k<4;k++){ const tx=x+4+k*5; ctx.moveTo(tx,y+12); ctx.quadraticCurveTo(tx+Math.sin(time*4+k+e.t)*4,y+20,tx+Math.sin(time*3+k)*3,y+28); } ctx.stroke();
+    ctx.fillStyle='rgba(236,96,190,.92)'; ctx.beginPath(); ctx.ellipse(x+11,y+12,12+pl,11-pl*0.5,0,Math.PI,0); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#7a1f5c'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.fillStyle='rgba(255,230,245,.85)'; ctx.fillRect(x+5,y+4,4,3); ctx.fillRect(x+12,y+2,3,2);
+    return; }
   const step=Math.floor(time*8)%2;
   if (e.type==='bug') flipDraw(e,()=>{
     ctx.fillStyle='#2a2230'; for (let i=0;i<3;i++) ctx.fillRect(4+i*7,15+((i+step)%2),3,5);
@@ -2554,7 +2649,7 @@ function hint(text){
   ctx.font=`9px ${FONT}`; ctx.textAlign='center'; const w=ctx.measureText(text).width+16, x=P.x+P.w/2-camX, y=P.y-26-camY;
   ctx.fillStyle='rgba(10,12,24,.75)'; ctx.fillRect(x-w/2,y-10,w,20); ctx.fillStyle='#fff'; ctx.fillText(text,x,y+1); ctx.textAlign='left';
 }
-const INTRO_SUB=['Solve math problems to ride to the next part of the world','Shellbacks hide in their shells. Stomp, then kick them!','Armored beetles take two stomps. Mind the canyon edges','The snow is slippery! Birds swoop over the ridge','Spikelings can’t be stomped. Use snot rockets or shells','Climb the giant tree, then ride the moving clouds!'];
+const INTRO_SUB=['Solve math problems to ride to the next part of the world','Shellbacks hide in their shells. Stomp, then kick them!','Tap jump to swim. Never touch the jellyfish!','Armored beetles take two stomps. Mind the canyon edges','The snow is slippery! Birds swoop over the ridge','Spikelings can’t be stomped. Use snot rockets or shells','Climb the giant tree, then ride the moving clouds!'];
 function render(){
   ctx.setTransform(1,0,0,1,0,0);
   if (!L){ ctx.fillStyle='#6fc0ee'; ctx.fillRect(0,0,VIEW_W,VIEW_H); return; }
